@@ -1,4 +1,4 @@
-(defproject com.palletops/discovery-api "0.1.0"
+(defproject com.palletops/discovery-api "0.1.1-SNAPSHOT"
   :description "Generate API from a discovery document"
   :url "https://github.com/palletops/discovery-api"
   :license {:name "Eclipse Public License"
