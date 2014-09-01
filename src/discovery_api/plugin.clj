@@ -6,7 +6,7 @@
 
 (def profiles
   {:discovery-api
-   {:dependencies [['clj-http "1.0.0"]]}})
+   {:dependencies [['http-kit "2.1.19"]]}})
 
 (defn middleware
   [project]

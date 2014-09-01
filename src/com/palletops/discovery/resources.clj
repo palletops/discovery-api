@@ -30,16 +30,17 @@
                 (symbol (name r))
                 `(schema.core/eq nil))]]
      :body `(->
-             (~(symbol (str "clj-http.client") (lower-case httpMethod))
-              (str (:endpoint ~'connection)
-                   ~base-path
-                   (-> ~path
-                       ~@(map #(do
-                                 `(string/replace
-                                   ~(str "{" (name %) "}")
-                                   ~(symbol (camel->dashed (name %)))))
-                              (keys required))))
-              {:as :json})
+             @(~(symbol (str "org.httpkit.client") (lower-case httpMethod))
+               (str (:endpoint ~'connection)
+                    ~base-path
+                    (-> ~path
+                        ~@(map #(do
+                                  `(string/replace
+                                    ~(str "{" (name %) "}")
+                                    ~(symbol (camel->dashed (name %)))))
+                               (keys required))))
+               {:as :stream}
+               ~'read-json)
              :body)}))
 
 (defn generate-resource
