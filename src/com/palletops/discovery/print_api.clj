@@ -13,6 +13,12 @@
        [~'schema.core])))
   (println \newline)
   (pprint `(def ~'Connection {:endpoint schema.core/Str}))
+  (println \newline)
+  (pprint `(defn-api ~'connect
+             "Return a connection map for the given endpoint"
+             {:sig [[schema.core/Str :- ~'Connection]]}
+             [~'endpoint]
+             {:endpoint ~'endpoint}))
   (println \newline))
 
 (defn print-schema [{:keys [name schema]}]
