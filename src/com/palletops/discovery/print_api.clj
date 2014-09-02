@@ -32,13 +32,15 @@
    `(def ~name ~schema))
   (println \newline))
 
-(defn print-fn [{:keys [name doc args sig body]}]
+(defn print-fn
+  "Print a generated function"
+  [{:keys [name arities meta] :as fn-m}]
   (pprint
-   `(defn-api ~name
-      ~doc
-      {:sig ~sig}
-      [~@args]
-      ~body))
+   `(~'defn-api ~name
+      ~(:doc meta)
+      {:sig ~(:sig meta)}
+      [~@(:args (first arities))]
+      ~(:body (first arities))))
   (println \newline))
 
 (defn print-api

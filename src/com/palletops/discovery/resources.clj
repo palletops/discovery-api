@@ -2,8 +2,10 @@
   "Generate API functions for resources"
   (:require
    [clojure.string :as string :refer [lower-case]]
+   [com.palletops.api-builder.core :refer [DefnMap]]
    [com.palletops.discovery.schemas :refer [generate-schema-map schema-type]]
-   [com.palletops.discovery.utils :refer [camel->dashed]]))
+   [com.palletops.discovery.utils :refer [camel->dashed]]
+   [schema.core :as schema]))
 
 (defn default-function-name
   "Default function name generator."
@@ -14,34 +16,40 @@
   [base-path resource-id action
    {:keys [id description httpMethod path parameters response]}
    {:keys [fn-name-f] :or {fn-name-f default-function-name}}]
+  {:post [(schema/validate DefnMap %)]}
   (let [required (filter (fn [[p v]] (:required v)) parameters)
         optional (into {} (filter (fn [[p v]] (not (:required v))) parameters))]
     {:name (fn-name-f id)
-     :doc description
-     :args (vec (concat
-                 ['connection]
-                 (map (fn [[p v]] (symbol (camel->dashed (name p)))) required)
-                 ['options]))
-     :sig `[[~'Connection
-             ~@(map schema-type (vals required))
-             ~(generate-schema-map optional)
-             :-
-             ~(if-let [r  (:$ref response)]
-                (symbol (name r))
-                `(schema.core/eq nil))]]
-     :body `(->
-             @(~(symbol (str "org.httpkit.client") (lower-case httpMethod))
-               (str (:endpoint ~'connection)
-                    ~base-path
-                    (-> ~path
-                        ~@(map #(do
-                                  `(string/replace
-                                    ~(str "{" (name %) "}")
-                                    ~(symbol (camel->dashed (name %)))))
-                               (keys required))))
-               {:as :stream}
-               ~'read-json)
-             :body)}))
+     :type :defn
+     :meta {:doc description
+            :sig `[[~'Connection
+                    ~@(map schema-type (vals required))
+                    ~(generate-schema-map optional)
+                    :-
+                    ~(if-let [r  (:$ref response)]
+                       (symbol (name r))
+                       `(schema.core/eq nil))]]}
+     :arities [{:args (vec (concat
+                            ['connection]
+                            (map (fn [[p v]] (symbol (camel->dashed (name p))))
+                                 required)
+                            ['options]))
+
+                :body `(->
+                        @(~(symbol (str "org.httpkit.client")
+                                   (lower-case httpMethod))
+                          (str (:endpoint ~'connection)
+                               ~base-path
+                               (-> ~path
+                                   ~@(map #(do
+                                             `(string/replace
+                                               ~(str "{" (name %) "}")
+                                               ~(symbol
+                                                 (camel->dashed (name %)))))
+                                          (keys required))))
+                          {:as :stream}
+                          ~'read-json)
+                        :body)}]}))
 
 (defn generate-resource
   [base-path id methods options]
