@@ -4,7 +4,7 @@
    [clojure.string :as string :refer [lower-case]]
    [com.palletops.api-builder.core :refer [DefnMap]]
    [com.palletops.discovery.schemas :refer [generate-schema-map schema-type]]
-   [com.palletops.discovery.utils :refer [camel->dashed]]
+   [com.palletops.discovery.utils :refer [camel->dashed kw->clj-kw]]
    [schema.core :as schema]))
 
 (defn default-function-name
@@ -23,8 +23,8 @@
      :type :defn
      :meta {:doc description
             :sig `[[~'Connection
-                    ~@(map schema-type (vals required))
-                    ~(generate-schema-map optional)
+                    ~@(map #(schema-type % {:kw-f kw->clj-kw}) (vals required))
+                    ~(generate-schema-map optional {:kw-f kw->clj-kw})
                     :-
                     ~(if-let [r  (:$ref response)]
                        (symbol (name r))
@@ -34,7 +34,6 @@
                             (map (fn [[p v]] (symbol (camel->dashed (name p))))
                                  required)
                             ['options]))
-
                 :body `(->
                         @(~(symbol (str "org.httpkit.client")
                                    (lower-case httpMethod))
@@ -48,7 +47,7 @@
                                                  (camel->dashed (name %)))))
                                           (keys required))))
                           {:as :stream}
-                          ~'read-json)
+                          runtime/read-json)
                         :body)}]}))
 
 (defn generate-resource

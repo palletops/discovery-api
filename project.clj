@@ -1,11 +1,11 @@
-(defproject com.palletops/discovery-api "0.1.1-SNAPSHOT"
+(defproject com.palletops/discovery-api-project "0.1.1-SNAPSHOT"
   :description "Generate API from a discovery document"
   :url "https://github.com/palletops/discovery-api"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[prismatic/schema "0.2.6"]
-                 [cheshire "5.3.1"]
-                 [fipp "0.4.3"]
-                 [com.palletops/api-builder "0.3.0"]]
-  :classifiers {:runtime {:source-paths ["runtime-src"]
-                          :dependencies [[http-kit "2.1.19"]]}})
+  :plugins [[lein-modules "0.3.8"]]
+  :aliases {"install" ["modules" "install"]
+            "deploy" ["modules" "deploy"]
+            "check" ["modules" "check"]
+            "test" ["modules" "test"]
+            "clean" ["with-profile" "+no-subprocess" "modules" "clean"]})
