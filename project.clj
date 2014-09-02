@@ -7,5 +7,5 @@
                  [cheshire "5.3.1"]
                  [fipp "0.4.3"]
                  [com.palletops/api-builder "0.3.0"]]
-  :profiles {:provided {:dependencies [[org.clojure/clojure "1.6.0"]
-                                       [leiningen-core "2.4.3"]]}})
+  :classifiers {:runtime {:source-paths ["runtime-src"]
+                          :dependencies [[http-kit "2.1.19"]]}})

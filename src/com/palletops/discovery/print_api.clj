@@ -3,7 +3,10 @@
   (:require
    [clojure.java.io :as io]
    [com.palletops.api-builder.api :refer [defn-api]]
+   [com.palletops.api-builder.impl]
    [fipp.clojure :refer [pprint]]))
+
+(def fn-form #'com.palletops.api-builder.impl/fn-form)
 
 (defn print-ns [ns-sym]
   (pprint
@@ -11,8 +14,8 @@
       (:require
        [~'cheshire.core :as ~'json]
        [~'clojure.java.io :as ~'io]
-       [~'com.palletops.api-builder.api]
-       [~'org.httpkit.client]
+       [~'com.palletops.api-builder.api :refer [~'defn-api]]
+       [~'com.palletops.discovery.runtime :as ~'runtime]
        [~'schema.core])))
   (println \newline)
   (pprint `(def ~'Connection {:endpoint schema.core/Str}))
@@ -22,18 +25,6 @@
              {:sig [[schema.core/Str :- ~'Connection]]}
              [~'endpoint]
              {:endpoint ~'endpoint}))
-  (println \newline)
-  (pprint '(defn success?
-             [{:keys [status]}]
-             (<= 200 status 299)))
-  (println \newline)
-  (pprint '(defn read-json
-             [resp]
-             (if (if-let [ct (:content-type (:headers resp))]
-                   (.startsWith ct "application/json"))
-               (update-in resp [:body]
-                          #(json/parse-stream (io/reader %) keyword))
-               resp)))
   (println \newline))
 
 (defn print-schema [{:keys [name schema]}]
