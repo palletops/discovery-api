@@ -23,17 +23,14 @@
      :type :defn
      :meta {:doc description
             :sig `[[~'Connection
-                    ~@(map #(schema-type % {:kw-f kw->clj-kw}) (vals required))
-                    ~(generate-schema-map optional {:kw-f kw->clj-kw})
+                    ~(generate-schema-map parameters {:kw-f kw->clj-kw})
                     :-
                     ~(if-let [r  (:$ref response)]
                        (symbol (name r))
                        `(schema.core/eq nil))]]}
-     :arities [{:args (vec (concat
-                            ['connection]
-                            (map (fn [[p v]] (symbol (camel->dashed (name p))))
-                                 required)
-                            ['options]))
+     :arities [{:args
+                ['connection
+                 {:keys (mapv kw->clj-kw (keys parameters)) :as 'options}]
                 :body `(->
                         @(~(symbol (str "org.httpkit.client")
                                    (lower-case httpMethod))
