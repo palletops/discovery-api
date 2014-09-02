@@ -7,15 +7,16 @@
 
 (defmulti schema-type
   "Return a type for a discovery property"
-  (fn [{:keys [type] :as property}] type))
+  (fn schema-type-dispatch
+    [{:keys [type] :as property} {:keys [kw-f]}] type))
 
 (defn generate-schema-map
-  [properties]
+  [properties {:keys [kw-f] :as options}]
   (reduce-kv
    (fn [m k {:keys [required] :as property}]
      (assoc m
-       (if required k `(schema/optional-key ~k))
-       (or (schema-type property)
+       (if required (kw-f k) `(schema/optional-key ~(kw-f k)))
+       (or (schema-type property options)
            (throw
             (ex-info
              (str "Don't know how to map discovery type '"
@@ -24,17 +25,20 @@
               :type type})))))
    {} properties))
 
-
-(defmethod schema-type "string" [_] `schema/Str)
+(defmethod schema-type "string"
+  [_ _]
+  `schema/Str)
 
 (defmethod schema-type "object"
-  [{:keys [properties additionalProperties]}]
+  [{:keys [properties additionalProperties]}
+   {:keys [kw-f] :as options}]
   (merge
-   (generate-schema-map properties)
+   (generate-schema-map properties options)
    (if additionalProperties
-     {`schema/Keyword (schema-type additionalProperties)})))
+     {`schema/Keyword (schema-type additionalProperties options)})))
 
-(defmethod schema-type "array" [{:keys [items] :as property}]
+(defmethod schema-type "array"
+  [{:keys [items] :as property} _]
   (if-let [t (:$ref items)]
     [(symbol t)]
     (throw (ex-info "Don't understand array type for property"
@@ -45,7 +49,7 @@
   "Generate a prismatic schema for a discovery document schema"
   [{:keys [id properties] :as s}]
   {:name (symbol id)
-   :schema (generate-schema-map properties)})
+   :schema (generate-schema-map properties {:kw-f identity})})
 
 (defn schemas
   "Build schemas from the discovery docs"
