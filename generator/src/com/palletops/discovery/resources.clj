@@ -24,28 +24,49 @@
      :meta {:doc description
             :sig `[[~'Connection
                     ~(generate-schema-map parameters {:kw-f kw->clj-kw})
-                    :-
-                    ~(if-let [r  (:$ref response)]
-                       (symbol (name r))
-                       `(schema.core/eq nil))]]}
+                    :- clojure.lang.IDeref]
+                   [~'Connection
+                    ~(generate-schema-map parameters {:kw-f kw->clj-kw})
+                    (schema/maybe {schema/Keyword schema/Any})
+                    :- clojure.lang.IDeref]
+                   [~'Connection
+                    ~(generate-schema-map parameters {:kw-f kw->clj-kw})
+                    (schema/maybe {schema/Keyword schema/Any})
+                    (schema/=> schema/Any {schema/Keyword schema/Any})
+                    :- clojure.lang.IDeref]]}
      :arities [{:args
                 ['connection
-                 {:keys (mapv kw->clj-kw (keys parameters)) :as 'options}]
+                 {:keys (mapv kw->clj-kw (keys parameters)) :as 'options}
+                 'http-options
+                 'callback]
                 :body `(->
-                        @(~(symbol (str "org.httpkit.client")
-                                   (lower-case httpMethod))
-                          (str (:endpoint ~'connection)
-                               ~base-path
-                               (-> ~path
-                                   ~@(map #(do
-                                             `(string/replace
-                                               ~(str "{" (name %) "}")
-                                               ~(symbol
-                                                 (camel->dashed (name %)))))
-                                          (keys required))))
-                          {:as :stream}
-                          runtime/read-json)
-                        :body)}]}))
+                        (runtime/request
+                         (merge
+                          ~'http-options
+                          {:method ~(keyword (lower-case httpMethod))
+                           :url (str (:endpoint ~'connection)
+                                     ~base-path
+                                     (-> ~path
+                                         ~@(map
+                                            #(do
+                                               `(string/replace
+                                                 ~(str "{" (name %) "}")
+                                                 ~(symbol
+                                                   (camel->dashed (name %)))))
+                                            (keys required))))
+                           :as :stream})
+                         ~'callback))}
+               {:args
+                ['connection
+                 {:keys (mapv kw->clj-kw (keys parameters)) :as 'options}
+                 'http-options]
+                :body `(~(fn-name-f id)
+                        ~'connection ~'options ~'http-options identity)}
+               {:args
+                ['connection
+                 {:keys (mapv kw->clj-kw (keys parameters)) :as 'options}]
+                :body `(~(fn-name-f id)
+                        ~'connection ~'options nil identity)}]}))
 
 (defn generate-resource
   [base-path id methods options]

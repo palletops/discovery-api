@@ -19,9 +19,15 @@
     (update-in resp [:body] #(json/parse-stream (io/reader %) keyword))
     resp))
 
+(defn body-if-not-error [{:keys [body error] :as resp}]
+  (if error
+    resp
+    body))
+
 (defn request
   "Make an http request, using the specified callback.
   The response body will be parsed if it is json, before
-  the callback is invoked."
+  the callback is invoked.  If there is no error, only the body
+  is passed to the callback."
   [opts callback]
-  (http/request opts (comp callback read-json)))
+  (http/request opts (comp callback body-if-not-error read-json)))

@@ -39,8 +39,9 @@
    `(~'defn-api ~name
       ~(:doc meta)
       {:sig ~(:sig meta)}
-      [~@(:args (first arities))]
-      ~(:body (first arities))))
+      ~@(for [arity arities]
+          (list (vec (:args arity))
+                (:body arity)))))
   (println \newline))
 
 (defn print-api
