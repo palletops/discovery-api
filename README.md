@@ -10,7 +10,7 @@ Add `[com.palletops/discovery-api "0.1.0-SNAPSHOT"]` to your `:dependencies`.
 ## Usage
 
 ```clj
-(require '[com.palletops.fleet.generator :as generator])
+(require '[com.palletops.discovery :as discovery])
 ```
 
 You need a clojure map that contains the discovery document, with keys
@@ -18,7 +18,7 @@ that are keywords.  You can read a json file from resources using the
 `document-from-resource` function.
 
 ```clj
-(def doc (document-from-resource "fleet-v1-alpha"))
+(def doc (discovery/document-from-resource "fleet-v1-alpha"))
 ```
 
 To generate an API namespace, pass the document to the `api-ns-string`
@@ -26,7 +26,8 @@ function, that returns a string that contains the source code for you
 API namespace, which you can write to file.
 
 ```clj
-(api-ns-string doc (symbol (str "com.palletops.fleet." version)) options)
+(discovery/api-ns-string
+  doc (symbol (str "com.palletops.fleet." version)) options)
 ```
 
 For a full example, see [clj-fleet][clj-fleet-generator].
