@@ -4,7 +4,8 @@
    [clojure.string :as string :refer [lower-case]]
    [com.palletops.api-builder.core :refer [DefnMap]]
    [com.palletops.discovery.schemas :refer [generate-schema-map schema-type]]
-   [com.palletops.discovery.utils :refer [camel->dashed kw->clj-kw]]
+   [com.palletops.discovery.utils
+    :refer [camel->dashed kw->clj-kw kw->camel-kw]]
    [schema.core :as schema]))
 
 (defn default-function-name
@@ -18,6 +19,8 @@
    {:keys [fn-name-f] :or {fn-name-f default-function-name}}]
   {:post [(schema/validate DefnMap %)]}
   (let [required (filter (fn [[p v]] (:required v)) parameters)
+        path-params(filter (fn [[p v]] #(= "path" (:location v))) parameters)
+        query-params(filter (fn [[p v]] #(= "query" (:location v))) parameters)
         optional (into {} (filter (fn [[p v]] (not (:required v))) parameters))]
     {:name (fn-name-f id)
      :type :defn
@@ -53,8 +56,14 @@
                                                  ~(str "{" (name %) "}")
                                                  ~(symbol
                                                    (camel->dashed (name %)))))
-                                            (keys required))))
-                           :as :stream})
+                                            (keys path-params))))
+                           :as :stream
+                           :query-params (let [o# (select-keys
+                                                   ~'options
+                                                   ~(mapv kw->camel-kw
+                                                          (keys query-params)))]
+                                           (zipmap (map kw->camel-kw (keys o#))
+                                                   (vals o#)))})
                          ~'callback
                          ~(if-let [r (:$ref response)]
                             (symbol (str (name r)))
