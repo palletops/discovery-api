@@ -8,4 +8,5 @@
             "deploy" ["modules" "deploy"]
             "check" ["modules" "check"]
             "test" ["modules" "test"]
-            "clean" ["with-profile" "+no-subprocess" "modules" "clean"]})
+            "clean" ["with-profile" "+no-subprocess" "modules" "clean"]}
+  :modules {})
