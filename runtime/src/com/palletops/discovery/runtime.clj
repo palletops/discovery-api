@@ -45,8 +45,8 @@
 
 (defn body-if-not-error
   [{:keys [body error] :as resp} body-schema]
-  (if error
-    resp
+  (if (:error body)
+    (update-in resp [:opts] dissoc :response)
     ((key->clj-kw body-schema) (schema/validate body-schema body))))
 
 (defn request

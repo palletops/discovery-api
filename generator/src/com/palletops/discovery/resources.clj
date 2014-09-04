@@ -15,37 +15,41 @@
 
 (defn generate-action
   [base-path resource-id action
-   {:keys [id description httpMethod path parameters response]}
+   {:keys [id description httpMethod path parameters request response]}
    {:keys [fn-name-f] :or {fn-name-f default-function-name}}]
   {:post [(schema/validate DefnMap %)]}
   (let [required (filter (fn [[p v]] (:required v)) parameters)
         path-params(filter (fn [[p v]] #(= "path" (:location v))) parameters)
         query-params(filter (fn [[p v]] #(= "query" (:location v))) parameters)
-        optional (into {} (filter (fn [[p v]] (not (:required v))) parameters))]
+        optional (into {} (filter (fn [[p v]] (not (:required v))) parameters))
+        params-schema (merge
+                       (generate-schema-map parameters {:kw-f kw->clj-kw})
+                       (if request
+                         {:body (symbol (str (:$ref request) "-clj"))}))
+        option-keys (-> (mapv kw->clj-kw (keys parameters))
+                        (cond-> request (conj :body)))]
     {:name (fn-name-f id)
      :type :defn
      :meta {:doc description
             :sig `[[~'Connection
-                    ~(generate-schema-map parameters {:kw-f kw->clj-kw})
+                    ~params-schema
                     :- clojure.lang.IDeref]
                    [~'Connection
-                    ~(generate-schema-map parameters {:kw-f kw->clj-kw})
+                    ~params-schema
                     (schema/maybe {schema/Keyword schema/Any})
                     :- clojure.lang.IDeref]
                    [~'Connection
-                    ~(generate-schema-map parameters {:kw-f kw->clj-kw})
+                    ~params-schema
                     (schema/maybe {schema/Keyword schema/Any})
                     (schema/=> schema/Any {schema/Keyword schema/Any})
                     :- clojure.lang.IDeref]]}
      :arities [{:args
-                ['connection
-                 {:keys (mapv kw->clj-kw (keys parameters)) :as 'options}
-                 'http-options
+                ['connection {:keys option-keys :as 'options} 'http-options
                  'callback]
-                :body `(->
-                        (runtime/request
+                :body `(runtime/request
+                        (merge
+                         ~'http-options
                          (merge
-                          ~'http-options
                           {:method ~(keyword (lower-case httpMethod))
                            :url (str (:endpoint ~'connection)
                                      ~base-path
@@ -60,23 +64,26 @@
                            :as :stream
                            :query-params (let [o# (select-keys
                                                    ~'options
-                                                   ~(mapv kw->camel-kw
-                                                          (keys query-params)))]
+                                                   ~(mapv
+                                                     kw->camel-kw
+                                                     (keys query-params)))]
                                            (zipmap (map kw->camel-kw (keys o#))
-                                                   (vals o#)))})
-                         ~'callback
-                         ~(if-let [r (:$ref response)]
-                            (symbol (str (name r)))
-                            `(schema.core/eq nil))))}
-               {:args
-                ['connection
-                 {:keys (mapv kw->clj-kw (keys parameters)) :as 'options}
-                 'http-options]
+                                                   (vals o#)))}
+                          ~(if request
+                             {:body
+                              `((runtime/key->camel-kw
+                                 ~(symbol (str (:$ref request) "-clj")))
+                                (:body ~'options))})
+                          ))
+                        ~'callback
+                        ~(if-let [r (:$ref response)]
+                           (symbol (str (name r)))
+                           `(schema.core/eq nil)))}
+               {:args ['connection {:keys option-keys :as 'options}
+                       'http-options]
                 :body `(~(fn-name-f id)
                         ~'connection ~'options ~'http-options identity)}
-               {:args
-                ['connection
-                 {:keys (mapv kw->clj-kw (keys parameters)) :as 'options}]
+               {:args ['connection {:keys option-keys :as 'options}]
                 :body `(~(fn-name-f id)
                         ~'connection ~'options nil identity)}]}))
 
