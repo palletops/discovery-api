@@ -1,15 +1,21 @@
 (ns com.palletops.discovery.print-api
   "Print a generated API"
   (:require
-   [fipp.clojure :refer [pprint]]
-   [com.palletops.api-builder.api :refer [defn-api]]))
+   [clojure.java.io :as io]
+   [com.palletops.api-builder.api :refer [defn-api]]
+   [com.palletops.api-builder.impl]
+   [fipp.clojure :refer [pprint]]))
+
+(def fn-form #'com.palletops.api-builder.impl/fn-form)
 
 (defn print-ns [ns-sym]
   (pprint
    `(~'ns ~ns-sym
       (:require
-       [~'clj-http.client]
-       [~'com.palletops.api-builder.api]
+       [~'cheshire.core :as ~'json]
+       [~'clojure.java.io :as ~'io]
+       [~'com.palletops.api-builder.api :refer [~'defn-api]]
+       [~'com.palletops.discovery.runtime :as ~'runtime]
        [~'schema.core])))
   (println \newline)
   (pprint `(def ~'Connection {:endpoint schema.core/Str}))
@@ -26,13 +32,16 @@
    `(def ~name ~schema))
   (println \newline))
 
-(defn print-fn [{:keys [name doc args sig body]}]
+(defn print-fn
+  "Print a generated function"
+  [{:keys [name arities meta] :as fn-m}]
   (pprint
-   `(defn-api ~name
-      ~doc
-      {:sig ~sig}
-      [~@args]
-      ~body))
+   `(~'defn-api ~name
+      ~(:doc meta)
+      {:sig ~(:sig meta)}
+      ~@(for [arity arities]
+          (list (vec (:args arity))
+                (:body arity)))))
   (println \newline))
 
 (defn print-api
