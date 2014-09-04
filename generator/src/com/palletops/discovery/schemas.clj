@@ -1,9 +1,11 @@
 (ns com.palletops.discovery.schemas
   "Generate prismatic schemas for schemas in discovery document."
-  (:require [cheshire.core :as json]
-            [clojure.java.io :as io]
-            [clojure.string :as string :refer [lower-case join split]]
-            [schema.core :as schema]))
+  (:require
+   [cheshire.core :as json]
+   [clojure.java.io :as io]
+   [clojure.string :as string :refer [lower-case join split]]
+   [com.palletops.discovery.utils :refer [kw->clj-kw]]
+   [schema.core :as schema]))
 
 (defmulti schema-type
   "Return a type for a discovery property"
@@ -44,15 +46,15 @@
     (throw (ex-info "Don't understand array type for property"
                     {:property property}))))
 
-
 (defn generate-schema
   "Generate a prismatic schema for a discovery document schema"
   [{:keys [id properties] :as s}]
-  {:name (symbol id)
-   :schema (generate-schema-map properties {:kw-f identity})})
+  [{:name (symbol id)
+    :schema (generate-schema-map properties {:kw-f identity})}
+   {:name (symbol (str id "-clj"))
+    :schema (generate-schema-map properties {:kw-f kw->clj-kw})}])
 
 (defn schemas
   "Build schemas from the discovery docs"
   [{:keys [schemas] :as discovery-doc}]
-  (for [[_ s] schemas]
-    (generate-schema s)))
+  (mapcat (comp generate-schema val) schemas))

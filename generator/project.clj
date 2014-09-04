@@ -6,5 +6,7 @@
   :dependencies [[prismatic/schema "0.2.6"]
                  [cheshire "5.3.1"]
                  [fipp "0.4.3"]
-                 [com.palletops/api-builder "0.3.0"]]
+                 [com.palletops/api-builder "0.3.0"]
+                 [com.palletops/discovery-api-runtime :version
+                  :exclusions [http-kit]]]
   :plugins [[lein-modules "0.3.8"]])

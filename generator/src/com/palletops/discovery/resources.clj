@@ -55,7 +55,10 @@
                                                    (camel->dashed (name %)))))
                                             (keys required))))
                            :as :stream})
-                         ~'callback))}
+                         ~'callback
+                         ~(if-let [r (:$ref response)]
+                            (symbol (str (name r)))
+                            `(schema.core/eq nil))))}
                {:args
                 ['connection
                  {:keys (mapv kw->clj-kw (keys parameters)) :as 'options}
