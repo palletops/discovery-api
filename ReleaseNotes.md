@@ -1,3 +1,7 @@
+## 0.1.2
+
+- Fix query and path parameters
+
 ## 0.1.1
 
 - Add :body parameter for post/put request

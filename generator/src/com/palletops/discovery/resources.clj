@@ -19,9 +19,9 @@
    {:keys [fn-name-f] :or {fn-name-f default-function-name}}]
   {:post [(schema/validate DefnMap %)]}
   (let [required (filter (fn [[p v]] (:required v)) parameters)
-        path-params(filter (fn [[p v]] #(= "path" (:location v))) parameters)
-        query-params(filter (fn [[p v]] #(= "query" (:location v))) parameters)
         optional (into {} (filter (fn [[p v]] (not (:required v))) parameters))
+        path-params (filter (fn [[p v]] (= "path" (:location v))) parameters)
+        query-params (filter (fn [[p v]] (= "query" (:location v))) parameters)
         params-schema (merge
                        (generate-schema-map parameters {:kw-f kw->clj-kw})
                        (if request
@@ -65,7 +65,7 @@
                            :query-params (let [o# (select-keys
                                                    ~'options
                                                    ~(mapv
-                                                     kw->camel-kw
+                                                     kw->clj-kw
                                                      (keys query-params)))]
                                            (zipmap (map kw->camel-kw (keys o#))
                                                    (vals o#)))}
