@@ -5,7 +5,7 @@ An library for generating an API from a Google API
 
 ## Installation
 
-Add `[com.palletops/discovery-api "0.1.1-SNAPSHOT"]` to your `:dependencies`.
+Add `[com.palletops/discovery-api "0.1.2-SNAPSHOT"]` to your `:dependencies`.
 
 ## Usage
 
