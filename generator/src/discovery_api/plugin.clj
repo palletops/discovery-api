@@ -6,7 +6,7 @@
 
 (def profiles
   {:discovery-api
-   {:dependencies [['com.palletops/discovery-api-runtime "0.1.2"]]}})
+   {:dependencies [['com.palletops/discovery-api-runtime "0.1.3-SNAPSHOT"]]}})
 
 (defn middleware
   [project]
